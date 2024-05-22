@@ -29,12 +29,12 @@
     <img src="https://assets.revolut.com/assets/brand/Revolut-Black.svg" alt="Logo" class="h-8">
     <div class="flex flex-col items-end">
       <h1 class="text-4xl font-semibold">EUR Statement</h1>
-      <p class="text-sm">Generated on the 20 May 2023</p>
+      <p class="text-sm">Generated on the {{ .DateCreated }}</p>
       <p class="text-sm">Revolut Bank UAB</p>
     </div>
   </div>
   <div class="flex flex-col items-start mt-16">
-    <h3 class="text-2xl font-semibold uppercase mb-4">Sandra Saulgrieze</h3>
+    <h3 class="text-2xl font-semibold uppercase mb-4">{{ .AccountHolder }}</h3>
     <p class="font-semibold">14 The Dale</p>
     <p class="font-semibold">Whitefield hall</p>
     <p class="font-semibold">Bettystown</p>
@@ -130,48 +130,29 @@
       <td>Money in</td>
       <td class="text-end w-12">Balance</td>
     </tr>
+    {{ range .Transactions }}
     <tr class="border-b border-black">
-      <td>3 Feb 2023</td>
+      <td>{{ .Date }}</td>
       <td class="py-2">
-        Apple Pay Top-Up by *5453</td>
-      <td></td>
-      <td>€50.00</td>
-      <td class="text-end w-12">€52.52</td>
-    </tr>
-    <tr class="border-b border-black">
-      <td>3 Feb 2023</td>
-      <td class="py-2">Apple Pay Top-Up by *5453</td>
-      <td></td>
-      <td>€100.00</td>
-      <td class="text-end w-12">€152.52</td>
-    </tr>
-    <tr class="border-b border-black">
-      <td>3 Feb 2023</td>
-      <td>
-        <p>To LINA MILLER SAULGRIEZE</p>
-        <p class="text-2xs">To: LINA MILLER SAULGRIEZE</p>
+        <p>{{ .MainDescription }}</p>
+        {{ if .SubDescription }}
+        <p class="text-2xs">{{ .SubDescription }}</p>
+        {{ end }}
       </td>
-
-      <td>€100.00</td>
-      <td></td>
-      <td class="text-end w-12">€52.52</td>
+      <td>{{ if .Out }}€{{ .Out }}{{ end }}</td> {{/* Display only if Out is not zero */}}
+      <td>{{ if .In }}€{{ .In }}{{ end }}</td>  {{/* Display only if In is not zero */}}
+      <td class="text-end w-12">€{{ .Balance }}</td>
     </tr>
-    <tr class="border-b border-black">
-      <td>7 Feb 2023</td>
-      <td>
-        <p>To LINA MILLER SAULGRIEZE</p>
-        <p class="text-2xs">To: LINA MILLER SAULGRIEZE</p>
-      </td>
-
-      <td>€10.00</td>
-      <td></td>
-      <td class="text-end w-12">€42.52</td>
+    {{ else }}
+    <tr>
+      <td colspan="5" class="text-center">No transactions found.</td>
     </tr>
+    {{ end }}
     </tbody>
   </table>
   <div class="grid grid-cols-4 gap-2 mt-20">
     <div class="flex justify-between">
-      <img src="qr-code.svg" alt="QR Code" class="h-16" />
+      <img src="assets/qr-code.svg" alt="QR Code" class="h-16" />
       <div class="flex flex-col">
         <p class="text-sm">Report lost/stolen card</p>
         <p class="text-xs">+370 5 214 3608</p>

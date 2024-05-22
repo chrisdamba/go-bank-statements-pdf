@@ -1,8 +1,130 @@
 package main
 
 import (
+	"bytes"
+	"context"
+	"fmt"
+	"github.com/chromedp/cdproto/page"
+	"github.com/chromedp/chromedp"
+	"html/template"
+	"log"
+	"os"
+)
+
+type StatementData struct {
+	AccountHolder string
+	DateCreated   string
+	Transactions  []Transaction
+}
+
+type Transaction struct {
+	Date            string
+	MainDescription string
+	SubDescription  string
+	Out             float64
+	In              float64
+	Balance         float64
+}
+
+func main() {
+	// Start a headless Chrome instance
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	// Prepare data for the template
+	data := StatementData{
+		AccountHolder: "Sandra Saulgrieze",
+		DateCreated:   "20 May 2023",
+		Transactions: []Transaction{
+			{
+				Date:            "3 Feb 2023",
+				MainDescription: "Apple Pay Top-Up by *5453",
+				SubDescription:  "",
+				Out:             0,
+				In:              50.00,
+				Balance:         52.52,
+			},
+			{
+				Date:            "3 Feb 2023",
+				MainDescription: "Apple Pay Top-Up by *5453",
+				SubDescription:  "",
+				Out:             0,
+				In:              100.00,
+				Balance:         152.52,
+			},
+			{
+				Date:            "3 Feb 2023",
+				MainDescription: "To LINA MILLER SAULGRIEZE",
+				SubDescription:  "To: LINA MILLER SAULGRIEZE",
+				Out:             100.00,
+				In:              0,
+				Balance:         52.52,
+			},
+			{
+				Date:            "7 Feb 2023",
+				MainDescription: "To LINA MILLER SAULGRIEZE",
+				SubDescription:  "To: LINA MILLER SAULGRIEZE",
+				Out:             10.00,
+				In:              0,
+				Balance:         42.52,
+			},
+		},
+	}
+
+	// Parse the HTML template
+	tmpl, err := template.ParseFiles("template.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Render the template to a buffer
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Navigate to the HTML content
+	err = chromedp.Run(ctx,
+		chromedp.Navigate("data:text/html,"+buf.String()),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var pageBuf []byte
+	// Generate the PDF
+	err = chromedp.Run(ctx,
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			var err error
+			pageBuf, _, err = page.PrintToPDF().WithPrintBackground(true).Do(ctx)
+			return err
+		}),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Save the PDF
+	err = os.WriteFile(
+		"statement.pdf",
+		pageBuf,
+		0644,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Done")
+}
+
+/*
+package main
+
+import (
+	"context"
 	"fmt"
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
+	"io/ioutil"
 	"log"
 	"os"
 )
@@ -43,3 +165,4 @@ func main() {
 
 	fmt.Println("Done")
 }
+*/

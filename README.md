@@ -1,71 +1,79 @@
-## HTML to PDF Converter (Go)
+## Dynamic Bank Statement Generator (Go)
 
-This simple Go application converts an HTML file (`page-1.html`) into a PDF document (`statement.pdf`) using the `wkhtmltopdf` tool.
+This Go application dynamically generates a PDF bank statement from an HTML template (`template.html`) using the `chromedp` library and headless Chrome. It populates the template with transaction data from a Go struct, allowing for flexible and personalized statement creation.
 
 ### Prerequisites
 
 *   **Go:** Ensure you have Go installed on your system. You can download it from the official website: [https://go.dev/](https://go.dev/)
-*   **wkhtmltopdf:** Install wkhtmltopdf. It's a command-line tool that renders HTML into PDF and various image formats. Download and install it from: [https://wkhtmltopdf.org/](https://wkhtmltopdf.org/)
-*   **go-wkhtmltopdf library:** This Go library provides a wrapper around wkhtmltopdf, making it easier to use within your Go code. Install it using:
+*   **chromedp library:** This library is used to control a headless Chrome or Chromium instance using the DevTools Protocol. Install it using:
     ```bash
-    go get github.com/SebastiaanKlippert/go-wkhtmltopdf
+    go get -u github.com/chromedp/chromedp
     ```
 
 ### Usage
 
-1.  **Place your HTML file:** Make sure your `page-1.html` file is in the same directory as the `main.go` file.
-
-2.  **Build:** In your terminal, navigate to the directory and run:
+1.  **Prepare your data:** Define a Go struct (e.g., `StatementData`) to hold your bank statement information, including account holder details and transaction data.
+2.  **Create an HTML template:** Design your `template.html` file. Use Go's template syntax (`{{ }}`) to insert dynamic data into the HTML structure.
+3.  **Place your files:** Ensure your `main.go`, `template.html`, and any associated CSS files (e.g., `styles.css`) are in the same directory.
+4.  **Build and Run:** Use the provided Makefile to build and run the application:
     ```bash
-    make build
+    make build  # Compile the Go code
+    make run    # Execute the compiled program
     ```
-    This will create the `converter` executable.
-3.  **Run:** To convert your HTML to PDF, run:
-    ```bash
-    make run   # or simply 'make'
-    ```
-    This will execute the `converter` executable and generate the `statement.pdf` file.
-4.  **Clean:** To clean up the generated files, run:
-    ```bash
-    make clean
-    ```
-
-### Customisation
-
-*   **Output file name:** Change the `"./statement.pdf"` argument in `pdfg.WriteFile()` to your desired output file name.
-*   **wkhtmltopdf options:** The `pdfg` object provides various options to customize the PDF generation process (e.g., DPI, orientation, margins). Refer to the `go-wkhtmltopdf` documentation for available options.
-*   **Input file:** Modify the `page := wkhtmltopdf.NewPage("page-1.html")` line to specify a different HTML file if needed.
+    This will generate a PDF file named `statement.pdf` in the same directory.
 
 ### How it Works
 
-The code does the following:
+1.  **Data Initialization:** The Go code initializes a `StatementData` struct with your bank statement information.
+2.  **Template Parsing:** The HTML template (`template.html`) is parsed using Go's `html/template` package.
+3.  **Template Execution:** The template is executed with the `StatementData`, dynamically filling in the placeholders with your data.
+4.  **Headless Chrome Rendering:** The `chromedp` library controls a headless Chrome instance to:
+    *   Navigate to the rendered HTML content.
+    *   Generate a PDF from the rendered page, including background styles and images.
+5.  **PDF Saving:** The generated PDF is saved to `statement.pdf`.
 
-1.  Creates a new PDF generator using `wkhtmltopdf.NewPDFGenerator()`.
-2.  Sets global options like DPI and orientation.
-3.  Creates a new page object from your HTML file using `wkhtmltopdf.NewPage("page-1.html")`.
-4.  Adds the page to the PDF generator.
-5.  Generates the PDF document in memory.
-6.  Writes the PDF content to a file on disk.
+### Code Structure
 
-### Troubleshooting
+*   **`StatementData` struct:** Defines the structure of your bank statement data.
+*   **`Transaction` struct:** Represents individual transactions within the statement.
+*   **`main` function:**
+    *   Initializes the `StatementData`.
+    *   Parses and executes the HTML template.
+    *   Uses `chromedp` to render and save the PDF.
 
-*   **"wkhtmltopdf not found":** Make sure wkhtmltopdf is installed and in your system's PATH.
-*   **"Failed to load about:blank":** This error usually indicates that wkhtmltopdf cannot access your HTML file or its resources (CSS, images). Ensure they are in the correct location and have the correct permissions.
+### Customization
 
-### Example `page-1.html`
+*   **Data:** Tailor the `StatementData` and `Transaction` structs to match your specific bank statement format.
+*   **Template:** Customize `template.html` to achieve your desired layout and styling.
+*   **Output:** Modify the output file name in `os.WriteFile()`.
+*   **Chrome Options:** Explore `chromedp` options for further customization of the PDF generation process (e.g., page size, margins).
+
+### Example Data
+
+```go
+data := StatementData{
+    AccountHolder: "Sandra Saulgrieze",
+    DateCreated:   "20 May 2023",
+    Transactions: []Transaction{
+        {Date: "3 Feb 2023", MainDescription: "Apple Pay Top-Up by *5453", In: 50.00, Balance: 52.52},
+        {Date: "3 Feb 2023", MainDescription: "Apple Pay Top-Up by *5453", In: 100.00, Balance: 152.52},
+        {Date: "3 Feb 2023", MainDescription: "To LINA MILLER SAULGRIEZE", Out: 100.00, Balance: 52.52},
+        {Date: "7 Feb 2023", MainDescription: "To LINA MILLER SAULGRIEZE", Out: 10.00, Balance: 42.52},
+    },
+}
+```
+
+### Example Template (`template.html`)
 
 ```html
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Example Page</title>
-    <link rel="stylesheet" href="assets/styles.css">
+    <title>Bank Statement</title>
+    <link rel="stylesheet" href="styles.css"> 
 </head>
 <body>
-    <h1>Hello, World!</h1>
-    <p>This is an example HTML page to be converted to PDF.</p>
-</body>
+    <h1>Account Holder: {{ .AccountHolder }}</h1>
+    </body>
 </html>
 ```
-
-**Note:** Make sure that your stylesheet (styles.css) and other assets are in the same assets directory as your HTML file.
