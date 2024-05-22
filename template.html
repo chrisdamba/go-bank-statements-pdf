@@ -100,20 +100,25 @@
       <td>Money in</td>
       <td class="text-end w-12">Closing balance</td>
     </tr>
-    <tr class="border-b border-black">
-      <td class="py-2">Account (Current Account)</td>
-      <td>€2.52</td>
-      <td>€1,944.09</td>
-      <td>€1,978.00</td>
-      <td class="text-end w-12">€36.43</td>
+    {{ range $index, $element := .BalanceSummaries }}
+    {{ if eq $index (sub (len $.BalanceSummaries) 1) }}
+    <tr> {{/* No class for the last row */}}
+      <td class="py-2">{{ $element.Product }}</td>
+      <td>€{{ $element.OpeningBalance }}</td>
+      <td>€{{ $element.Out }}</td>
+      <td>€{{ $element.In }}</td>
+      <td class="text-end w-12">€{{ $element.ClosingBalance }}</td>
     </tr>
-    <tr>
-      <td class="py-2">Total</td>
-      <td>€2.52</td>
-      <td>€1,944.09</td>
-      <td>€1,978.00</td>
-      <td class="text-end w-12">€36.43</td>
+    {{ else }}
+    <tr class="border-b border-black"> {{/* Class for other rows */}}
+      <td class="py-2">{{ $element.Product }}</td>
+      <td>€{{ $element.OpeningBalance }}</td>
+      <td>€{{ $element.Out }}</td>
+      <td>€{{ $element.In }}</td>
+      <td class="text-end w-12">€{{ $element.ClosingBalance }}</td>
     </tr>
+    {{ end }}
+    {{ end }}
     </tbody>
   </table>
   <p class="text-2xs">The balance on your statement might differ from the balance shown in your app. The statement

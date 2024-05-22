@@ -12,9 +12,17 @@ import (
 )
 
 type StatementData struct {
-	AccountHolder string
-	DateCreated   string
-	Transactions  []Transaction
+	AccountHolder    string
+	DateCreated      string
+	Transactions     []Transaction
+	BalanceSummaries []BalanceSummary
+}
+type BalanceSummary struct {
+	Product        string
+	OpeningBalance float64
+	Out            float64
+	In             float64
+	ClosingBalance float64
 }
 
 type Transaction struct {
@@ -35,6 +43,22 @@ func main() {
 	data := StatementData{
 		AccountHolder: "Sandra Saulgrieze",
 		DateCreated:   "20 May 2023",
+		BalanceSummaries: []BalanceSummary{
+			{
+				Product:        "Account (Current Account)",
+				OpeningBalance: 2.52,
+				Out:            1944.09,
+				In:             1978.00,
+				ClosingBalance: 36.43,
+			},
+			{
+				Product:        "Total",
+				OpeningBalance: 2.52,
+				Out:            1944.09,
+				In:             1978.00,
+				ClosingBalance: 36.43,
+			},
+		},
 		Transactions: []Transaction{
 			{
 				Date:            "3 Feb 2023",
@@ -72,7 +96,11 @@ func main() {
 	}
 
 	// Parse the HTML template
-	tmpl, err := template.ParseFiles("template.html")
+	tmpl, err := template.New("template.html").Funcs(template.FuncMap{
+		"sub": func(a, b int) int {
+			return a - b
+		},
+	}).ParseFiles("template.html")
 	if err != nil {
 		log.Fatal(err)
 	}
